@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+# IMMUX OS - Lightning Resilient Automated Installer
+set -e
+
+STATE_FILE="/tmp/.immux_install_state"
+TARGET_DIR="/target"
+
+# Text UI formatting helpers
+INFO="[\e[34m*\e[0m]"
+SUCCESS="[\e[32m+\e[0m]"
+WARN="[\e[33m!\e[34m]"
+
+echo -e "$INFO Initializing IMMUX OS Deployment Subsystem..."
+
+# -------------------------------------------------------------------------
+# INTERRUPTION CHECKPOINT LOGIC
+# -------------------------------------------------------------------------
+get_state() {
+    if [ -f "$STATE_FILE" ]; then
+        cat "$STATE_FILE"
+    else
+        echo "START"
+    fi
+}
+
+set_state() {
+    echo "$1" > "$STATE_FILE"
+}
+
+CURRENT_STATE=$(get_state)
+
+if [ "$CURRENT_STATE" != "START" ]; then
+    echo -e "\n$WARN WARNING: A previous installation attempt was interrupted at step: [$CURRENT_STATE]"
+    echo "--------------------------------------------------------"
+    echo "1) RESUME the last installation from the checkpoint."
+    echo "2) START OVER from scratch (wipes current progress)."
+    echo "--------------------------------------------------------"
+    read -p "Select an option (1 or 2): " CHOICE
+    
+    if [ "$CHOICE" == "2" ]; then
+        echo "$INFO Overwriting previous state. Resetting installer..."
+        CURRENT_STATE="START"
+        set_state "START"
+    else
+        echo "$SUCCESS Resuming IMMUX setup from phase: [$CURRENT_STATE]"
+    fi
+fi
+
+# -------------------------------------------------------------------------
+# PHASE 1: DISK PREPARATION
+# -------------------------------------------------------------------------
+if [ "$CURRENT_STATE" == "START" ] || [ "$CURRENT_STATE" == "DISK_FAIL" ]; then
+    echo -e "$INFO Phase 1: Formatting local storage devices..."
+    set_state "DISK_FAIL"
+    
+    # Target drive configuration (can be automated or dynamically detected)
+    TARGET_DISK=$(lsblk -dno NAME,TYPE | grep disk | head -n1 | awk '{print $1}')
+    echo "$INFO Target deployment block device found: /dev/$TARGET_DISK"
+    
+    # Quick blast partition tables and apply standard clean layout
+    parted -s /dev/$TARGET_DISK mklabel gpt
+    parted -s /dev/$TARGET_DISK mkpart primary ext4 1MiB 100%
+    
+    mkfs.ext4 -F /dev/${TARGET_DISK}1
+    mkdir -p "$TARGET_DIR"
+    mount /dev/${TARGET_DISK}1 "$TARGET_DIR"
+    
+    CURRENT_STATE="DISK_DONE"
+    set_state "DISK_DONE"
+fi
+
+# -------------------------------------------------------------------------
+# PHASE 2: INSTANT FLASH IMAGE EXTRACTION (The Speed Engine)
+# -------------------------------------------------------------------------
+if [ "$CURRENT_STATE" == "DISK_DONE" ] || [ "$CURRENT_STATE" == "EXTRACT_FAIL" ]; then
+    echo -e "$INFO Phase 2: Streaming compressed core system image..."
+    set_state "EXTRACT_FAIL"
+    
+    # We fetch a pre-built, ultra-stripped IMMUX core environment archive
+    # Replace the URL below with your final image storage location
+    IMAGE_URL="https://github.com"
+    
+    echo "$INFO Downloading and extracting payload directly to storage drive..."
+    curl -sSL "$IMAGE_URL" | tar -C "$TARGET_DIR" -xzf -
+    
+    CURRENT_STATE="EXTRACT_DONE"
+    set_state "EXTRACT_DONE"
+fi
+
+# -------------------------------------------------------------------------
+# PHASE 3: SUBSYSTEM CONFIGURATION
+# -------------------------------------------------------------------------
+if [ "$CURRENT_STATE" == "EXTRACT_DONE" ] || [ "$CURRENT_STATE" == "CONFIG_FAIL" ]; then
+    echo -e "$INFO Phase 3: Injecting core IMMUX system network & storage layers..."
+    set_state "CONFIG_FAIL"
+    
+    # Mount necessary pseudo-filesystems for chroot host execution
+    mount --bind /dev "$TARGET_DIR/dev"
+    mount --bind /proc "$TARGET_DIR/proc"
+    mount --bind /sys "$TARGET_DIR/sys"
+    
+    # 1. Inject the Zero-Trust network script we built
+    echo "$INFO Deploying Network Shield Layer..."
+    chroot "$TARGET_DIR" mkdir -p /opt/immux/network
+    curl -sSL https://githubusercontent.com -o "$TARGET_DIR/opt/immux/network/network-shield.sh"
+    chmod +x "$TARGET_DIR/opt/immux/network/network-shield.sh"
+    
+    # 2. Inject the Cloud sync backend service we configured
+    echo "$INFO Deploying Storage Sync Core..."
+    curl -sSL https://githubusercontent.com -o "$TARGET_DIR/etc/systemd/system/immux-sync.service"
+    chroot "$TARGET_DIR" systemctl enable immux-sync.service
+    
+    # 3. Rebuild Bootloader rapidly
+    echo "$INFO Updating system boot sectors..."
+    chroot "$TARGET_DIR" update-grub
+    
+    # Unmount tracking mounts
+    umount "$TARGET_DIR/dev" "$TARGET_DIR/proc" "$TARGET_DIR/sys"
+    
+    CURRENT_STATE="CONFIG_DONE"
+    set_state "CONFIG_DONE"
+fi
+
+# -------------------------------------------------------------------------
+# PHASE 4: CLEANUP & EXECUTION
+# -------------------------------------------------------------------------
+if [ "$CURRENT_STATE" == "CONFIG_DONE" ]; then
+    echo -e "$SUCCESS IMMUX OS Installation completed successfully in record time!"
+    rm -f "$STATE_FILE"
+    echo -e "$INFO Ready for first boot. Please remove installation media and restart."
+fi
