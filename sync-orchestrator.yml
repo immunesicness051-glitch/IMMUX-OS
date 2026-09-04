@@ -1,0 +1,44 @@
+name: Immux-OS Sync & Infrastructure Orchestrator
+
+on:
+  push:
+    branches:
+      - main
+      - uat
+      - qa
+
+jobs:
+  build-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Core Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/immux-core:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/immux-core:${{ github.ref_name }}
+
+      - name: Update K8s Metapack Manifests (Config Sync)
+        run: |
+          cd k8s/metapacks/
+          sed -i "s|image: ghcr.io/.*|image: ghcr.io/${{ github.repository }}/immux-core:${{ github.sha }}|g" core-deployment.yaml
+          git config --global user.name "immux-sync-bot"
+          git config --global user.email "sync-bot@immux.internal"
+          git add core-deployment.yaml
+          git commit -m "chore(sync): auto-update image reference to ${{ github.sha }} [skip ci]"
+          git push
+
+      - name: Trigger immsh Drift Notification
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+            -d '{"status": "sync_initiated", "commit": "${{ github.sha }}", "env": "${{ github.ref_name }}"}' \
+            https://immux.internal
