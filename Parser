@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+import json
+import os
+import sys
+
+STATUS_FILE = "/var/run/immux/sync_status.json"
+
+def get_status():
+    if not os.path.exists(STATUS_FILE):
+        return {"status": "Unknown", "commit": "N/A", "drift": "No baseline"}
+    try:
+        with open(STATUS_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {"status": "Error", "commit": "N/A", "drift": "Parse Error"}
+
+def show_health_widget():
+    status = get_status()
+    print("\n\033[1;35m┌─── Immux-OS Core Health Widget ──────────────────────────────────┐\033[0m")
+
+    # Sync Status Line
+    sync_color = "\033[1;32m" if status.get("status") == "Synced" else "\033[1;33m"
+    print(f"│ \033[1mEnvironment Sync:\033[0m {sync_color}{status.get('status'):<15}\033[0m Target Commit: \033[36m{status.get('commit')[:8]:<15}\033[0m │")
+    print(f"│ \033[1mSync Drift Status:\033[0m {status.get('drift'):<47} │")
+    print("├─── Hardware Graphics Aggregation ────────────────────────────────┤")
+
+    # Driver Check
+    virgl_check = "ACTIVE" if os.path.exists("/dev/dri") else "FALLBACK"
+    zink_check = "ENABLED" if "MESA_LOADER_DRIVER_OVERRIDE" in os.environ else "DISABLED"
+    print(f"│ \033[1mvirGL Driver:\033[0m {virgl_check:<16} │ \033[1mMesa Zink Layer:\033[0m {zink_check:<16} │")
+    print("\033[1;35m└─── Powered by Immux-OS Kernel ───────────────────────────────────┘\033[0m\n")
+
+if __name__ == "__main__":
+    show_health_widget()
