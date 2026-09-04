@@ -1,0 +1,39 @@
+import os
+import json
+import mmap
+
+SHM_PATH = "/dev/shm/immux_bridge.session"
+BRIDGE_SIZE = 4096
+
+def write_session_bridge(user_id, token, active_env):
+    """Encapsulates and writes secure session tokens into the fast-path memory bridge."""
+    payload = {
+        "user_id": user_id,
+        "token": token,
+        "env": active_env,
+        "timestamp": os.times()[4]
+    }
+    data = json.dumps(payload).encode('utf-8').zfill(BRIDGE_SIZE)
+
+    fd = os.open(SHM_PATH, os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        os.ftruncate(fd, BRIDGE_SIZE)
+        with mmap.mmap(fd, BRIDGE_SIZE, mmap.MAP_SHARED, mmap.PROT_WRITE) as mm:
+            mm.write(data)
+    finally:
+        os.close(fd)
+
+def read_session_bridge():
+    """Allows individual container sandboxes to fetch authenticated tokens instantly."""
+    if not os.path.exists(SHM_PATH):
+        return None
+
+    fd = os.open(SHM_PATH, os.O_RDONLY)
+    try:
+        with mmap.mmap(fd, BRIDGE_SIZE, mmap.MAP_SHARED, mmap.PROT_READ) as mm:
+            data = mm.read().decode('utf-8').strip('\x00')
+            return json.loads(data)
+    except Exception:
+        return None
+    finally:
+        os.close(fd)
