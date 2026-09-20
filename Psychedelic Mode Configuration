@@ -1,0 +1,1 @@
+set_shader_param --glow="breathing" --frequency=0.5Hz --palette="psychedelic"
