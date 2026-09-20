@@ -31,3 +31,46 @@
     }
   }
 }
+
+
+
+
+
+
+
+💾 Atomic Snapshot Scheduler (immux_persistence_matrix)
+
+
+#!/bin/bash
+# Immux-OS Persistence Matrix Automated Backup Engine
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_DIR="/mnt/immux_space/linux_root/var/backups/immux_matrix"
+MATRIX_SRC="/etc/immux/apps.json"
+
+mkdir -p $BACKUP_DIR
+
+echo -e "\e[1;34m[*] Freezing state parameters for active matrix snapshot...\e[0m"
+
+if [ -f "$MATRIX_SRC" ]; then
+    # Generate structural verification hash to prevent state file corruption
+    jq '.' $MATRIX_SRC > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        # Create atomic archive snapshot 
+        cp $MATRIX_SRC "$BACKUP_DIR/matrix_snapshot_$TIMESTAMP.json"
+        tar -czf "$BACKUP_DIR/matrix_bundle_$TIMESTAMP.tar.gz" -C /etc/immux apps.json
+        
+        echo -e "  \e[1;32m[✓]\e[0m Local backup logged cleanly: matrix_snapshot_$TIMESTAMP.json"
+        
+        # Cloud Storage Routing Mirroring (Pipes out to AWS/Google Cloud Storage Node Mounts)
+        if mountpoint -q /mnt/immux_space/cloud_storage; then
+            cp "$BACKUP_DIR/matrix_bundle_$TIMESTAMP.tar.gz" /mnt/immux_space/cloud_storage/
+            echo -e "  \e[1;32m[✓]\e[0m Mirror snapshot uploaded safely to remote Cloud Storage array."
+        fi
+    else
+        echo -e "  \e[1;31m[𝘅]\e[0m Error: JSON verification validation failed. Matrix state file is malformed."
+    fi
+else
+    echo -e "  \e[1;31m[𝘅]\e[0m Error: Core persistence resource target file not found."
+fi
+
+
