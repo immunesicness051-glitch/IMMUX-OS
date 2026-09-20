@@ -1,0 +1,12 @@
+# 1. Update your local mobile package directory maps
+pkg update -y && pkg install proot-distro jq -y
+
+# 2. Extract and mount the compiled PRoot workspace system image
+mkdir -p ~/immux_core_sandbox
+tar -xzhf /sdcard/Download/immux_workspace_core.tar.gz -C ~/immux_core_sandbox/
+
+# 3. Initialize and execute the independent shell environment
+proot --link2symlink \
+      -0 -r ~/immux_core_sandbox/ \
+      -b /dev -b /proc -b /sys -b /sdcard \
+      /usr/bin/immuxsh
