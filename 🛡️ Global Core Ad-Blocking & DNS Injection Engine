@@ -1,0 +1,31 @@
+#!/bin/bash
+# Immux-OS Global Network Ad-Blocking Sync Subsystem
+echo -e "\e[1;31m[*] Injecting Central Host Filtering Core...\e[0m"
+
+# 1. Define Persistent Aggregated Master Source Lists
+BLOCKLIST_URLS=(
+    "https://githubusercontent.com"
+    "https://adaway.org"
+)
+LOCAL_IMMUX_HOSTS="/etc/immux/hosts.blocked"
+mkdir -p /etc/immux
+
+# 2. Compile and De-duplicate Host Signatures
+echo "" > $LOCAL_IMMUX_HOSTS
+for url in "${BLOCKLIST_URLS[@]}"; do
+    curl -s "$url" | grep '^0\.0\.0\.0' >> $LOCAL_IMMUX_HOSTS
+done
+
+# Sort and remove overlapping rules error-free
+sort -u $LOCAL_IMMUX_HOSTS -o $LOCAL_IMMUX_HOSTS
+
+# 3. Synchronize Across Bridged Filesystems Concurrently
+# Overwrite target hosts structures inside local micro-world routing loops
+cp $LOCAL_IMMUX_HOSTS /mnt/immux_space/linux_root/etc/hosts
+cp $LOCAL_IMMUX_HOSTS /mnt/immux_space/windows_c/Windows/System32/drivers/etc/hosts 2>/dev/null
+
+# Android adb container specific overlay inject
+adb shell "mount -o rw,remount /" 2>/dev/null
+adb push $LOCAL_IMMUX_HOSTS /system/etc/hosts 2>/dev/null
+
+echo -e "\e[1;32m[+] Network Shield Enforced: $(wc -l < $LOCAL_IMMUX_HOSTS) malicious domains blacklisted system-wide.\e[0m"
