@@ -1,0 +1,32 @@
+#!/bin/bash
+# Immux-OS Low-Overhead Cross-Distribution ISO Compiler Framework
+echo -e "\e[1;36m[*] Setting up ISO compilation platform variables...\e[0m"
+
+# 1. Initialize Baseline Building Packages
+PACMAN_DEPS=(archiso mkinitcpio xorriso squashfs-tools grub libisoburn)
+check_and_install_deps "${PACMAN_DEPS[@]}"
+
+# 2. Structure Build Context Folders
+BUILD_WORKSPACE="/tmp/immux_iso_builder"
+mkdir -p $BUILD_WORKSPACE/profile/ai_injected_assets
+
+# 3. Mount and Cross-Compile Core Infrastructure 
+# Merges the core network initialization files and ad-blockers into your custom distribution builds
+cp -r /etc/immux/apps.json $BUILD_WORKSPACE/profile/ai_injected_assets/
+cp /etc/immux/hosts.blocked $BUILD_WORKSPACE/profile/ai_injected_assets/hosts
+
+# 4. Compile the ISO File Structure Error-Free
+echo -e "  \e[1;34m[*] Running SquashFS file compression loops...\e[0m"
+mksquashfs $BUILD_WORKSPACE/profile $BUILD_WORKSPACE/immux_live.squashfs -comp xz &>/dev/null
+
+xorriso -as mkisofs \
+    -iso-level 3 \
+    -full-iso9660-filenames \
+    -volid "IMMUX_DISTRO_CORE" \
+    -eltorito-boot boot/syslinux/isolinux.bin \
+    -eltorito-catalog boot/syslinux/boot.cat \
+    -no-emul-boot -boot-load-size 4 -boot-info-table \
+    -output /mnt/immux_space/linux_root/output/iso_builds/immux_custom_desktop.iso \
+    $BUILD_WORKSPACE &>/dev/null
+
+echo -e "\e[1;32m[+] Compilation complete: /output/iso_builds/immux_custom_desktop.iso is ready.\e[0m"
