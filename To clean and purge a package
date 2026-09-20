@@ -1,0 +1,2 @@
+imm app-remove --target=windows_env --id=win_cmd_plus
+# Unlinks binary descriptors, updates local matrix state, and empties face canvas allocation
