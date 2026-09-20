@@ -1,0 +1,6 @@
+# Command line structure deployed natively across environments
+imm install <package_name> [--global] [--sandbox]
+
+# Examples:
+imm install blackarch-toolkit --sandbox   # Deploys safely inside isolation rule
+imm install custom-browser --global      # Available across main user space layers
