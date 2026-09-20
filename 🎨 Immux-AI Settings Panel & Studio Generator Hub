@@ -1,0 +1,12 @@
+📁 Target Output Work-Directories Mapped In-UI
+The generation directories mirror the workspace rules we configured earlier:
+
+🎵 AI Music: immux_ai/output/music/
+🎬 AI Video: immux_ai/output/video/
+🖼️ AI Images: immux_ai/output/images/
+📦 App Maker / Repo Packages: immux_ai/output/app_builds/
+💿 ISO / Distro Maker Workspace: immux_ai/output/iso_builds/
+🐚 Scripts & Automation Code: immux_ai/output/bashshell_scripts/
+📚 Storylines & Core Prompts: immux_ai/core/prompts/
+🧥 Interactive Fashion Designer Studio & Online Printshop Gateway
+Inside the AI Creative Fashion Tab, the system integrates a complete parametric customization studio targeting urban aesthetics:
