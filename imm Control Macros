@@ -1,0 +1,2 @@
+imm app-add --target=linux_env --pkg=linux_wireshark
+# Updates persistence schema array registry, sets status to deployed, and updates the canvas list
