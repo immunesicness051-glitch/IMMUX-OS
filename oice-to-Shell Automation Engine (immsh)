@@ -1,0 +1,5 @@
+# Route dynamic hooks to underlying Ollama/Gemini template endpoints
+immsh --route --input="voice_payload_stream" {
+    if_match("open terminal") -> deploy_env(termux.shell)
+    if_match("status")       -> pipe_to(core.health_widget)
+}
