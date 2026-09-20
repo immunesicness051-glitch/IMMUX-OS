@@ -1,0 +1,33 @@
+// Immux-OS Production UI Graphics Lifecycle Manifest
+// Path: /etc/immux/theme/lifecycle_assets.json
+{
+  "immux_theme_identity": {
+    "system_build_version": "1.0.0-Stable-Decoupled",
+    "phases": {
+      "pre_boot": {
+        "source_asset": "/usr/share/immux/boot/preboot_immune_sickness.png",
+        "scaling": "stretch_to_fit_1080p",
+        "action": "initialize_hardware_probe"
+      },
+      "grub_menu": {
+        "source_asset": "/boot/grub/themes/immux/coastline_splash.tga",
+        "ai_overlay_enabled": true,
+        "ai_dictionary_path": "/boot/grub/immux_ai_dictionary.cfg"
+      },
+      "display_manager_login": {
+        "source_asset": "/usr/share/immux/wm/deity_welcome.png",
+        "auth_box_position": "center",
+        "credential_isolation": "local_keychain_only"
+      },
+      "desktop_workspace": {
+        "ai_chat_avatar_asset": "/usr/share/immux/ai/avatar_moss_cloak.png",
+        "wm_theme_style": "/usr/share/themes/immux-psychedelic/wm-frame.css",
+        "color_breathing_loop": "active_24s_cycle"
+      },
+      "session_termination": {
+        "source_asset": "/usr/share/immux/wm/shaman_shutdown.png",
+        "trigger_script": "/usr/bin/immux-snapshot-daemon --purge-now"
+      }
+    }
+  }
+}
