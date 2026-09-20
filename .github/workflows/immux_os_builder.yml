@@ -1,0 +1,120 @@
+# Immux-OS Automated Continuous Integration & Build Pipeline
+# Path: .github/workflows/immux_os_builder.yml
+
+name: Immux-OS Master Automated Builder
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'
+      - 'etc/immux/**'
+      - 'usr/bin/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # 💿 JOB 1: COMPILE IMMUTABLE HYBRID SYSTEM ISO
+  build-live-iso:
+    name: Compile Hardened Live Hybrid ISO
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Repository Tree
+        uses: actions/checkout@v4
+
+      - name: Provision Core Linux Compilation Toolchains
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools libisoburn-dev jq nftables
+
+      - name: Execute Netfilter Rule Syntax Verification Check
+        run: |
+          echo "[*] Auditing custom nftables rule syntax configurations..."
+          # Test compile the firewall blueprint to catch errors before packaging the system root
+          sudo nft -c -f etc/immux/nftables.conf
+          echo "[✓] Netfilter validation step completed successfully."
+
+      - name: Assemble Pre-Baked Baseline Directories & Asset Profiles
+        run: |
+          mkdir -p build_workspace/rootfs/etc/immux/profiles
+          mkdir -p build_workspace/rootfs/usr/share/immux/boot
+          
+          # Inject tracking-hardened configurations, privacy shields, and network rule templates
+          cp etc/immux/nftables.conf build_workspace/rootfs/etc/nftables.conf
+          cp etc/immux/profiles/browser_security_extended.json build_workspace/rootfs/etc/immux/profiles/
+          cp etc/immux/profiles/firefox_conceal_rules.json build_workspace/rootfs/etc/immux/profiles/
+          cp etc/immux/hosts.blocked build_workspace/rootfs/etc/immux/hosts
+          
+          # Map localized user lifecycle splash screens into structural paths
+          cp usr/share/immux/boot/*.png build_workspace/rootfs/usr/share/immux/boot/
+
+      - name: Execute High-Velocity SquashFS Multi-Threaded Compression
+        run: |
+          mksquashfs build_workspace/rootfs build_workspace/immux_live.squashfs -comp xz -b 1M
+
+      - name: Structure Bootloader & Compile Live System Image
+        run: |
+          mkdir -p build_workspace/iso/boot/grub
+          mv build_workspace/immux_live.squashfs build_workspace/iso/boot/
+          
+          # Generate Master Live bootable boot sector tracking formats cleanly
+          xorriso -as mkisofs \
+            -iso-level 3 \
+            -full-iso9660-filenames \
+            -volid "IMMUX_DISTRO_STABLE" \
+            -output output/iso_builds/immux_custom_desktop.iso \
+            build_workspace/iso/
+
+      - name: Archive and Publish Live ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: immux-custom-desktop-iso
+          path: output/iso_builds/immux_custom_desktop.iso
+          retention-days: 7
+
+  # 🤖 JOB 2: PACKAGE PORTABLE ROOTLESS ANDROID WORKSPACE (APK Container)
+  build-android-apk:
+    name: Package Rootless Android APK Container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Repository Tree
+        uses: actions/checkout@v4
+
+      - name: Initialize Java & Android SDK Native Environments
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set Up Node.js Runtime Platform
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Pre-Fetch global Wayland-Core Multi-Model Execution Nodes
+        run: |
+          npm install -g @ferroxlabs/wayland-core --quiet
+          mkdir -p android/app/src/main/assets/bin/
+          cp $(which wayland-core) android/app/src/main/assets/bin/
+
+      - name: Inject PRoot Translation Binaries & User Profile Presets
+        run: |
+          mkdir -p android/app/src/main/assets/proot/
+          # Inject standard user shortcut mapping parameters and credential layouts
+          cp etc/immux/skel/.immuxrc android/app/src/main/assets/proot/dot_immuxrc
+
+      - name: Execute Native Gradle Build Sequence
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Archive and Publish Mobile Container Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: immux-workspace-core-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 7
