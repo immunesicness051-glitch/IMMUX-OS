@@ -1,0 +1,4 @@
+# Define isolated micro-world targets for commands
+@target:termux    # Route downstream instructions to Termux space
+@target:kali      # Route to Kali pentest micro-world container
+@target:arch      # Route to custom Arch backend structure
