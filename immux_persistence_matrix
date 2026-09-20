@@ -1,0 +1,33 @@
+{
+  "immux_persistence_matrix": {
+    "windows_env": {
+      "target_root": "/mnt/immux_space/windows_c",
+      "installed_apps": [
+        {"id": "win_xplorer", "name": "Xplorer Pro", "exec": "bin/xplor.exe", "size_mb": 42},
+        {"id": "win_cmd_plus", "name": "Enhanced Terminal Admin", "exec": "system32/cmd_p.exe", "size_mb": 12}
+      ],
+      "available_repo_pool": [
+        {"id": "win_ida_pro", "name": "IDA Pro Free Evaluation", "description": "Binary analysis tool suite"}
+      ]
+    },
+    "android_env": {
+      "target_root": "/mnt/immux_space/android_storage",
+      "installed_apps": [
+        {"id": "droid_termux", "name": "Termux Client Core", "exec": "com.termux", "size_mb": 85}
+      ],
+      "available_repo_pool": [
+        {"id": "droid_re_toolkit", "name": "APK Analyzer Hook", "description": "Manifest debugger and package auditing asset"}
+      ]
+    },
+    "linux_env": {
+      "target_root": "/mnt/immux_space/linux_root",
+      "installed_apps": [
+        {"id": "arch_blackarch_meta", "name": "BlackArch Auditing Pack", "exec": "bin/blackarch-menu", "size_mb": 1420},
+        {"id": "linux_wayfire", "name": "Wayfire Composer", "exec": "usr/bin/wayfire", "size_mb": 18}
+      ],
+      "available_repo_pool": [
+        {"id": "linux_wireshark", "name": "Wireshark Package", "description": "Network traffic analyzer protocol debugger"}
+      ]
+    }
+  }
+}
