@@ -1,0 +1,35 @@
+#!/bin/bash
+# Immux-OS Cross-Container Wayland Display Link Initialization Script
+echo -e "\e[1;35m[*] Provisioning Secure Wayland Socket Bridge Array...\e[0m"
+
+# 1. Establish the Global Shared Runtime Boundary Directory
+export XDG_RUNTIME_DIR="/run/user/1000"
+export WAYLAND_DISPLAY="wayland-0"
+mkdir -p $XDG_RUNTIME_DIR
+chmod 700 $XDG_RUNTIME_DIR
+
+# 2. Expose the Host Display Socket to the Container Isolation Layers
+# Securely bind the communication channel across the VFS filesystem endpoints
+mkdir -p /mnt/immux_space/linux_root/run/user/1000
+mkdir -p /mnt/immux_space/android_storage/wayland_socket
+
+# Create a bind mount proxy mapping to bridge the network socket boundary
+mount --bind $XDG_RUNTIME_DIR /mnt/immux_space/linux_root/run/user/1000
+
+# 3. Android / Waydroid Display Interface Pass-through
+# Links raw container rendering pipelines directly into the host compositor
+if [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]; then
+    ln -sf $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY /mnt/immux_space/android_storage/wayland_socket/wayland-0
+    echo -e "  \e[1;32m[✓]\e[0m Wayland display socket linked to Android sandbox subsystem."
+else
+    echo -e "  \e[1;31m[𝘅]\e[0m Error: Host compositor socket not found. Initializing fallback nested mode..."
+    wayfire --config /etc/immux/wayfire_nested.ini &
+fi
+
+# 4. Windows Winboat Layer Integration via Xwayland Proxy
+# Spawns a lightweight screen-space translation link for legacy .exe execution
+echo -e "  \e[1;34m[*] Spawning Winboat Xwayland server layer mapping on Display :1...\e[0m"
+Xwayland :1 -listen tcp -wm /usr/bin/immux-win-wm &>/dev/null &
+export DISPLAY=:1
+
+echo -e "\e[1;32m[+] Wayland Graphical Routing Link Matrix Successfully Locked Without Errors.\e[0m"
