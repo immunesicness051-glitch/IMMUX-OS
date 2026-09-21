@@ -1,0 +1,63 @@
+/usr/local/bin/immux-mount-hotplug.sh
+
+
+#!/usr/bin/env bash
+# Immux-OS Dynamic Hotplug Namespace Injection Driver
+set -euo pipefail
+
+ACTION="${1}"
+DEV_NODE="${2}" # Example: sdb1
+MOUNT_BASE="/mnt/media-${DEV_NODE}"
+
+# Target environment link maps
+ENV_TARGET_PATHS=(
+    "/mnt/immux-pool/alpine_active/sysroot/mnt/external"
+    "/mnt/immux-pool/arch_active/sysroot/mnt/external"
+    "/mnt/immux-pool/termux_active/sysroot/mnt/external"
+)
+
+# Text Terminal Accent Mappings
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+NC='\033[0m'
+
+execute_mount_sequence() {
+    echo -e "${GREEN}[+] Flash drive insertion intercepted (/dev/${DEV_NODE}). Configuring mount mappings...${NC}"
+    mkdir -p "${MOUNT_BASE}"
+    
+    # Mount block device safely using atomic optimizations
+    mount -o noatime,nodev,nosuid,utf8 "/dev/${DEV_NODE}" "${MOUNT_BASE}" || true
+
+    # Core injection phase: Cross bind-mount directory layers right into environmental sandboxes
+    for target_path in "${ENV_TARGET_PATHS[@]}"; do
+        mkdir -p "${target_path}"
+        mount --bind "${MOUNT_BASE}" "${target_path}"
+    done
+    echo -e "${GREEN}[+] Storage infrastructure nodes synchronized within multi-world frames successfully.${NC}"
+}
+
+execute_unmount_sequence() {
+    echo -e "${RED}[!] Flash drive removal detected (/dev/${DEV_NODE}). Dismantling namespace hooks...${NC}"
+    
+    for target_path in "${ENV_TARGET_PATHS[@]}"; do
+        umount -l "${target_path}" || true
+        rmdir "${target_path}" || true
+    done
+    
+    umount -l "${MOUNT_BASE}" || true
+    rmdir "${MOUNT_BASE}" || true
+    echo -e "${RED}[+] Media mounting tree scrubbed cleanly.${NC}"
+}
+
+case "${ACTION}" in
+    "add")
+        execute_mount_sequence
+        ;;
+    "remove")
+        execute_unmount_sequence
+        ;;
+    *)
+        echo "Usage: ${0} {add|remove} [device_node]"
+        exit 1
+        ;;
+esac
