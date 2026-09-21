@@ -1,0 +1,74 @@
+/usr/local/bin/immux-storage-snapshot.py
+
+
+#!/usr/bin/env python3
+"""
+Immux-OS Btrfs Storage Automation Engine
+Manages Copy-on-Write subvolume layers, automated transient rollbacks, 
+and subvolume space recovery metrics for multi-world environments.
+"""
+
+import os
+import sys
+import datetime
+import subprocess
+
+POOL_PATH = "/mnt/immux-pool"
+SUBVOLUMES = {
+    "arch_userland": f"{POOL_PATH}/arch_active",
+    "termux_bridge": f"{POOL_PATH}/termux_active",
+    "android_shared": f"{POOL_PATH}/android_active"
+}
+SNAPSHOT_DIR = f"{POOL_PATH}/snapshots"
+
+def run_cmd(cmd):
+    try:
+        res = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return res.stdout.decode().strip()
+    except subprocess.CalledProcessError as e:
+        print(f"[-] Btrfs Op Failed: {cmd}\nError: {e.stderr.decode().strip()}", file=sys.stderr)
+        return None
+
+def verify_btrfs_filesystem():
+    """Validates if target pool is mounted on a true Btrfs mountpoint."""
+    fstype = run_cmd(f"findmnt -n -o FSTYPE {POOL_PATH}")
+    if fstype != "btrfs":
+        print(f"[-] Target pool path {POOL_PATH} is not a valid Btrfs layer. Halting CoW routines.")
+        return False
+    return True
+
+def capture_cow_snapshot(subvol_name, path):
+    """Creates a timestamped read-only CoW snapshot of the active environment workspace."""
+    if not os.path.exists(path):
+        print(f"[-] Environment path missing: {path}. Skipping snapshot.")
+        return
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dest_snap = f"{SNAPSHOT_DIR}/{subvol_name}_{timestamp}"
+    
+    os.makedirs(SNAPSHOT_DIR, exist_ok=True)
+    print(f"[+] Snapshotting {subvol_name} state via zero-cost copy-on-write allocation...")
+    run_cmd(f"btrfs subvolume snapshot -r {path} {dest_snap}")
+
+def purge_old_snapshots(subvol_name, keep_count=5):
+    """Prunes old historic snapshots to recover block-level metadata spaces."""
+    print(f"[+] Reclaiming storage: Evaluated historical states for {subvol_name}...")
+    snapshots = [s for s in os.listdir(SNAPSHOT_DIR) if s.startswith(subvol_name)]
+    snapshots.sort()
+    
+    while len(snapshots) > keep_count:
+        oldest = snapshots.pop(0)
+        target_delete = f"{SNAPSHOT_DIR}/{oldest}"
+        print(f"[*] Removing historical node: {oldest}")
+        run_cmd(f"btrfs subvolume delete {target_delete}")
+
+if __name__ == "__main__":
+    if os.geteuid() != 0:
+        print("[-] Root access required for block level storage alterations.")
+        sys.exit(1)
+        
+    if verify_btrfs_filesystem():
+        for name, active_path in SUBVOLUMES.items():
+            capture_cow_snapshot(name, active_path)
+            purge_old_snapshots(name, keep_count=5)
+        print("[+] Btrfs storage optimization and tracking sync complete.")
