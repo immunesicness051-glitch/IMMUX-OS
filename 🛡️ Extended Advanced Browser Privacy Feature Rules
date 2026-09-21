@@ -1,0 +1,24 @@
+// Immux-OS Core Extended Browser Security Blueprint Profile
+// Path: /etc/immux/profiles/browser_security_extended.json
+{
+  "browser_privacy_core": {
+    "anti_fingerprinting_matrix": {
+      "canvas_noise_injection": true,
+      "audio_context_spoofing": true,
+      "webgl_vendor_masking": "Generic/Unidentifiable Linux Core",
+      "font_enumeration_restriction": true
+    },
+    "network_leak_prevention": {
+      "webrtc_ip_handling_policy": "disable_non_proxied_udp",
+      "block_media_device_enumeration": true,
+      "dns_over_https_enforcement": "local_stub_resolver_only",
+      "referrer_policy_override": "no-referrer-when-downgrade"
+    },
+    "dynamic_user_agent_shuffler": {
+      "enabled": true,
+      "shuffle_interval_seconds": 1800,
+      "operating_system_target_pool": ["X11; Linux x86_64", "Wayland; Arch Linux Core"],
+      "preserve_session_continuity_tokens": false
+    }
+  }
+}
