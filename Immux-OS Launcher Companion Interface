@@ -1,0 +1,3 @@
+immux-launcher-companion
+
+This utility acts as your storage autopilot, running quietly in the background to handle the "more with less" philosophy. It lets you monitor compressed vs. active app sizes in real time, automatically indexes your files, and handles offloading massive installation structures to SD cards, external SSDs, or your free-tier cloud clusters while maintaining an active link. Because it utilizes your Isolated Game Save Snapshots, you can move a 150 GB footprint completely off your system drive, and pull it back instantly whenever you want to play without losing your place.
