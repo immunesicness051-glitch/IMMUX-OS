@@ -1,0 +1,26 @@
+#!/bin/bash
+# Immux-OS Production-Grade Atomic Matrix Swapper
+# Path: /usr/bin/immux-snapshot-daemon
+
+MATRIX_PATH="/etc/immux/apps.json"
+SNAP_ACTIVE="/etc/immux/apps.json.snap"
+SNAP_TMP="/etc/immux/apps.json.tmp"
+
+while true; do
+    if [ -f "$MATRIX_PATH" ]; then
+        # 1. Structural parse check using local streaming jq engine
+        jq '.' "$MATRIX_PATH" > "$SNAP_TMP" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            # 2. Atomic replacement: Move temp to active snapshot space
+            # This instantly unlinks and deletes the previous snapshot from disk blocks
+            mv "$SNAP_TMP" "$SNAP_ACTIVE"
+            
+            # Sync cache buffers straight to underlying file tables
+            sync
+        else
+            # If the source file is open/mid-write, clean up the temp block and skip safely
+            rm -f "$SNAP_TMP"
+        fi
+    fi
+    sleep 30
+done
