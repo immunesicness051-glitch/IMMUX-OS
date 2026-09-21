@@ -1,0 +1,32 @@
+/etc/systemd/system/immux-chroot-bind.service
+
+[Unit]
+Description=Immux-OS Cross-Environment Dynamic Path Isolation and Bind-Mounter
+After=mnt-immux\x2dpool.mount
+Requires=mnt-immux\x2dpool.mount
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# Target directories initialization
+ExecStartPre=/usr/bin/mkdir -p /mnt/immux-pool/arch_active/sysroot/proc
+ExecStartPre=/usr/bin/mkdir -p /mnt/immux-pool/arch_active/sysroot/sys
+ExecStartPre=/usr/bin/mkdir -p /mnt/immux-pool/arch_active/sysroot/dev
+ExecStartPre=/usr/bin/mkdir -p /mnt/immux-pool/arch_active/sysroot/tmp
+
+# Dynamic API filesystem injections for full functionality inside containers
+ExecStart=/usr/bin/mount --rbind /proc /mnt/immux-pool/arch_active/sysroot/proc
+ExecStart=/usr/bin/mount --rbind /sys  /mnt/immux-pool/arch_active/sysroot/sys
+ExecStart=/usr/bin/mount --rbind /dev  /mnt/immux-pool/arch_active/sysroot/dev
+ExecStart=/usr/bin/mount --rbind /tmp  /mnt/immux-pool/arch_active/sysroot/tmp
+
+# Clean teardown safeguards upon system shutdown or manual workspace reload
+ExecStop=/usr/bin/umount -R /mnt/immux-pool/arch_active/sysroot/proc
+ExecStop=/usr/bin/umount -R /mnt/immux-pool/arch_active/sysroot/sys
+ExecStop=/usr/bin/umount -R /mnt/immux-pool/arch_active/sysroot/dev
+ExecStop=/usr/bin/umount -R /mnt/immux-pool/arch_active/sysroot/tmp
+
+[Install]
+WantedBy=multi-user.target
