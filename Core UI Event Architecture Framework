@@ -1,0 +1,65 @@
+/usr/local/share/immux-ui/story_engine_frame.json
+
+
+{
+  "$schema": "https://immux.org",
+  "component": "ImmuxStoryEngineFrame",
+  "meta": {
+    "identifier": "sys_story_engine_ui",
+    "description": "Reactive interface architecture blueprint managing voice intents, desktop cube shaders, and package lists."
+  },
+  "properties": {
+    "dimensions": {
+      "default_view": "3D_CUBE_GRID",
+      "viewport_fallback": "FLAT_TERMINAL_STREAM"
+    },
+    "animation_profiles": {
+      "dev_mode_breathing": {
+        "style": "radial-gradient-pulse",
+        "duration_ms": 3000,
+        "easing": "cubic-bezier(0.4, 0.0, 0.2, 1)"
+      }
+    }
+  },
+  "subsystems": [
+    {
+      "name": "voice_intent_capture_socket",
+      "interface": "WebPCMStreamer",
+      "properties": {
+        "sample_rate_hz": 16000,
+        "buffer_chunk_size": 4096,
+        "routing_endpoints": {
+          "on_intent_match_syshealth": "TRIGGER_LAYOUT_SYSHEALTH",
+          "on_intent_match_package": "DEPLOY_ENVIRONMENT_PACKAGE"
+        }
+      }
+    },
+    {
+      "name": "repository_package_browser",
+      "interface": "DynamicListViewer",
+      "properties": {
+        "environments_supported": ["Arch_Linux", "BlackArch_Sec", "Termux_Core", "Alpine_Base"],
+        "interaction_modes": {
+          "on_click_item": "RENDER_DESCRIPTION_MODAL",
+          "on_confirm_install": "EXECUTE_IMMSH_PIPELINE"
+        }
+      }
+    },
+    {
+      "name": "global_ad_blocking_toggle",
+      "interface": "SystemWideNetworkHookSwitch",
+      "properties": {
+        "default_state": true,
+        "binding_target": "/etc/immux/network.json",
+        "on_toggle_action": "SYNCHRONIZE_NFTABLES_SINKHOLE"
+      }
+    }
+  ],
+  "security_gates": {
+    "developer_menu_unlock": {
+      "trigger_mechanism": "BANNER_TAP_SEQUENTIAL",
+      "required_taps": 7,
+      "target_unlock_state": "DEV_OPTIONS_VISIBLE"
+    }
+  }
+}
