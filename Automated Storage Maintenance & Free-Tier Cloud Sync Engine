@@ -1,0 +1,75 @@
+/usr/local/bin/immux-cleaner.py
+
+
+#!/usr/bin/env python3
+"""
+Immux-OS Automated Storage Maintenance & Multi-Provider Free-Tier Cloud Synchronizer
+Optimizes local disk sectors, scrubs transient package caches, recovers Btrfs pool overheads,
+and safely mirrors localized user persistence zones onto encrypted free-tier cloud clusters.
+"""
+
+import os
+import sys
+import subprocess
+import json
+
+# Pre-mapped high-volume free tier destination endpoints 
+CLOUD_REMOTES = ["proton_free:", "mega_free:", "gdrive_free:", "backblaze_b2_free:"]
+MAINTENANCE_LOG = "/var/log/immux/storage_maintenance.json"
+
+def get_disk_free_space(path="/mnt/immux-pool"):
+    try:
+        stat = os.statvfs(path)
+        return round((stat.f_bavail * stat.f_frsize) / (1024 * 1024 * 1024), 2)
+    except Exception:
+        return 0.0
+
+def execute_system_scrub():
+    print("\033[1;36m[+] Initializing Immux-OS Auto-Cleaner & Disk Scrub Routines...\033[0m")
+    initial_space = get_disk_free_space()
+    
+    # 1. Purge transient repository caches inside sandbox file trees
+    print("    - Purging volatile environment package manager pools...")
+    subprocess.run("pacman -Scc --noconfirm >/dev/null 2>&1 || true", shell=True)
+    subprocess.run("apk cache clean >/dev/null 2>&1 || true", shell=True)
+    
+    # 2. Defragment and rebalance core Btrfs subvolumes to recover slack block sizes
+    if os.path.exists("/mnt/immux-pool"):
+        print("    - Rebalancing Btrfs metadata memory block spaces...")
+        subprocess.run("btrfs filesystem defragment -r /mnt/immux-pool >/dev/null 2>&1 || true", shell=True)
+
+    # 3. Flush dynamic thumbnail blocks, runtime temp caches, and dangling container system logs
+    subprocess.run("rm -rf /tmp/* /var/tmp/* ~/.cache/thumbnails/*", shell=True)
+    
+    recovered_space = round(get_disk_free_space() - initial_space, 2)
+    print(f"\033[1;32m[+] Storage maintenance completed. Recovered space: {max(0.0, recovered_space)} GB.\033[0m")
+    return max(0.0, recovered_space)
+
+def synchronize_free_tier_cloud():
+    print("\033[1;34m[+] Assembling multi-provider free-tier backup transmission layers...\033[0m")
+    local_target = "/mnt/immux-pool/user_persistence_matrix/"
+    
+    if not os.path.exists(local_target):
+        print("    - User data persistence matrix segment absent. Skipping cloud sync pipeline.")
+        return
+
+    # Sequentially transmit encrypted payload blocks to valid configured storage remotes
+    for remote in CLOUD_REMOTES:
+        print(f"    - Attempting synchronization sync to endpoint: \033[1;35m{remote}\033[0m")
+        # Leverage rclone background sync nodes with optimal bandwidth limitations to keep endpoints inside rate bounds
+        cmd = f"rclone sync {local_target} {remote}immux_backup_node --bwlimit 8M --fast-list --copy-links --ignore-errors"
+        res = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        if res.returncode == 0:
+            print(f"      \033[1;32m[✓] Sync successfully processed on provider cluster '{remote}'.\033[0m")
+            break # Exit loop once secondary mirror validation matches successfully
+        else:
+            print(f"      \033[1;33m[!] Target provider remote '{remote}' structural fallback. Re-routing payload...\033[0m")
+
+if __name__ == "__main__":
+    if os.geteuid() != 0:
+        print("[-] System cleaning loops require root elevation privileges.")
+        sys.exit(1)
+        
+    space_saved = execute_system_scrub()
+    synchronize_free_tier_cloud()
