@@ -1,0 +1,21 @@
+#!/bin/bash
+# Immux-OS Core Security Profile Profile Overlay for ISO Creator
+echo -e "\e[1;36m[*] Injecting Tracking Interceptor and Privacy Matrix profiles into build target...\e[0m"
+
+# Path allocations inside the temporary loop overlay mount
+ISO_OVERLAY_ROOT="/tmp/immux_iso_builder/profile/ai_injected_assets"
+mkdir -p "$ISO_OVERLAY_ROOT/etc/immux/profiles"
+mkdir -p "$ISO_OVERLAY_ROOT/usr/share/immux/extension"
+
+# 1. Bake in Cookie Concealer profile definitions
+cp /etc/immux/profiles/browser_security_extended.json "$ISO_OVERLAY_ROOT/etc/immux/profiles/"
+cp /etc/immux/profiles/firefox_conceal_rules.json "$ISO_OVERLAY_ROOT/etc/immux/profiles/"
+
+# 2. Inject real-time timeline interception monitoring binaries
+cp /usr/bin/immux-tracker-daemon "$ISO_OVERLAY_ROOT/usr/bin/"
+echo "Defaults timestamp_timeout=60" > "$ISO_OVERLAY_ROOT/etc/sudoers.d/immux_auth"
+
+# 3. Synchronize global DNS Null-Routing tables directly into template file layouts
+cp /etc/immux/hosts.blocked "$ISO_OVERLAY_ROOT/etc/hosts"
+
+echo -e "\e[1;32m[✓] Proxy configurations successfully pre-baked into standard Linux/Arch templates.\e[0m"
