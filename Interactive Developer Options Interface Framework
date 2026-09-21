@@ -1,0 +1,70 @@
+/usr/local/bin/immux-dev-dashboard.py
+
+
+#!/usr/bin/env python3
+"""
+Immux-OS Reactive Developer Dashboard Console Canvas
+Extracts live metrics state vectors to dynamically alter terminal rendering canvas views,
+breathing pulse speeds, and advanced environment hardware tracking maps.
+"""
+
+import os
+import sys
+import json
+import time
+
+METRICS_PATH = "/run/immux/telemetry_dashboard.json"
+
+def fetch_telemetry_payload():
+    if not os.path.exists(METRICS_PATH):
+        return {"system_metrics": {"global_cpu_utilization_pct": 10.0, "global_ram_utilization_pct": 15.0}, "sandbox_storage_strains": {}}
+    try:
+        with open(METRICS_PATH, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {"system_metrics": {"global_cpu_utilization_pct": 0.0, "global_ram_utilization_pct": 0.0}, "sandbox_storage_strains": {}}
+
+def generate_breathing_color(cpu_strain):
+    """Calculates responsive ambient breathing pulse variations utilizing CPU load thresholds."""
+    if cpu_strain > 75.0:
+        return "\033[48;5;88m" # Deep Crimson Pulse for heavy system computation processing
+    elif cpu_strain > 40.0:
+        return "\033[48;5;130m" # Warm Orange Amber breathing state
+    else:
+        return "\033[48;5;22m"  # Calm Jade Emerald sequence for optimized background operations
+
+def draw_canvas():
+    while True:
+        data = fetch_telemetry_payload()
+        cpu = data["system_metrics"]["global_cpu_utilization_pct"]
+        ram = data["system_metrics"]["global_ram_utilization_pct"]
+        bg = generate_breathing_color(cpu)
+        
+        os.system('clear' if os.name == 'posix' else 'cls')
+        print(f"{bg}\033[1;37m========================================================================\033[0m")
+        print(f"{bg}\033[1;37m        IMMUX-OS SYSTEM MASTER DEVELOPER OPTIONS MATRIX CONSOLE         \033[0m")
+        print(f"{bg}\033[1;37m========================================================================\033[0m\n")
+        
+        # Draw dynamic responsive measurement slider blocks
+        cpu_blocks = int(cpu // 5)
+        ram_blocks = int(ram // 5)
+        
+        print(f"  \033[1;36m[System CPU Strain Engine Load]\033[0m")
+        print(f"  ├─ [ {'█' * cpu_blocks}{'-' * (20 - cpu_blocks)} ] {cpu}%")
+        print(f"  └─ {bg} Ambient Pulse Mode: Breathing Engine Synchronized {\033[0m\n")
+        
+        print(f"  \033[1;35m[System Memory Array Metrics Allocation]\033[0m")
+        print(f"  └─ [ {'█' * ram_blocks}{'-' * (20 - ram_blocks)} ] {ram}%\n")
+        
+        print(f"  \033[1;33m[Isolated Container Storage Boundaries Tracking]\033[0m")
+        for box, size in data.get("sandbox_storage_strains", {}).items():
+            print(f"  ├─ {box:<15} : {size}")
+            
+        print("\n\033[1;30mPress Ctrl+C to minimize developer instrumentation layouts.\033[0m")
+        time.sleep(0.8)
+
+if __name__ == "__main__":
+    try:
+        draw_canvas()
+    except KeyboardInterrupt:
+        print("\033[0m\n[+] Developer window metrics minimized safely.")
