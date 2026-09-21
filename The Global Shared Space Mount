@@ -1,0 +1,19 @@
+/etc/systemd/system/mnt-immux\x2dpool.mount
+
+
+
+[Unit]
+Description=Immux-OS Btrfs Copy-on-Write Core Master Storage Pool
+Documentation=https://github.com
+DefaultDependencies=no
+After=systemd-modules-load.service
+Before=local-fs.target
+
+[Mount]
+What=/dev/disk/by-label/IMMUX_POOL
+Where=/mnt/immux-pool
+Type=btrfs
+Options=defaults,noatime,compress=zstd:3,autodefrag,space_cache=v2,subvol=/
+
+[Install]
+WantedBy=local-fs.target
