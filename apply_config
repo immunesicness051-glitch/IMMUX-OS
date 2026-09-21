@@ -1,0 +1,7 @@
+# Define an error-resilient app block
+apply_config {
+    file => "/my_app_config.imm"
+    state => "installed"
+    isolation => "binfmt_misc"
+    ad_block => "enabled"         # Applies system-wide network blocking
+}
