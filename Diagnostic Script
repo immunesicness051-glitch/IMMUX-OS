@@ -1,0 +1,53 @@
+/usr/local/bin/immux-verify-input.py
+
+
+#!/usr/bin/env python3
+"""
+Immux-OS Display Routing & Input Diagnostic Utility
+Validates desktop communication endpoints, Wayland environment locks, 
+and input pipe availability for secure application transitions.
+"""
+
+import os
+import sys
+
+def run_diagnostics():
+    passed = True
+    print("\033[94m[+]\033[0m Starting Immux-OS Display and Input Verification System...")
+
+    # 1. Verify Display Server Variable Routing Boundaries
+    wayland_display = os.environ.get("WAYLAND_DISPLAY")
+    x_display = os.environ.get("DISPLAY")
+    
+    if wayland_display:
+        print(f"    - Wayland Routing: Active [\033[92m{wayland_display}\033[0m]")
+    elif x_display:
+        print(f"    - X11 Display Routing: Active [\033[92m{x_display}\033[0m]")
+    else:
+        print("    - Display Server Link: Headless/Absent [\033[93mWarning\033[0m]")
+        print("      Applications will safely launch using terminal-stream fallbacks.")
+
+    # 2. Check Local Dev Virtual TTY Multiplexer Sockets
+    pts_path = "/dev/pts"
+    if os.path.exists(pts_path) and len(os.listdir(pts_path)) > 0:
+        print(f"    - Sandbox Shell Terminal Inputs (TTY): Configured [\033[92mOK\033[0m]")
+    else:
+        print("    - Sandbox Shell Terminal Inputs (TTY): Unlinked [\033[91mCRITICAL\033[0m]")
+        passed = False
+
+    # 3. Check for Active Input Subsystem Node Mappings
+    input_devs = "/dev/input"
+    if os.path.exists(input_devs):
+        print(f"    - Touch / Keyboard Event Subsystem Blocks: Available [\033[92mOK\033[0m]")
+    else:
+        print("    - Input Event Subsystem: Detached [\033[93mWarning\033[0m] (Expected on pure headless setups)")
+
+    if passed:
+        print("\033[92m[+] Input and display verification step completed successfully.\033[0m")
+        return True
+    else:
+        print("\033[91m[-] Environment routing configuration issues discovered.\033[0m")
+        return False
+
+if __name__ == "__main__":
+    run_diagnostics()
