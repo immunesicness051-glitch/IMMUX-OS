@@ -1,0 +1,61 @@
+
+/usr/local/bin/immux-ram-cache.sh
+
+
+#!/usr/bin/env bash
+# Immux-OS RAM-Disk Optimization & Copy-on-Write Flash Lifespan Extension Driver
+set -euo pipefail
+
+# ANSI Theme Map
+CYAN='\033[1;36m'
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+NC='\033[0m'
+
+RAM_DISK_DIR="/mnt/immux-ramcache"
+PERSISTENT_STORE="/mnt/immux-pool/cache_backing"
+ALLOCATION_SIZE="2G"
+
+initialize_ram_cache() {
+    echo -e "${CYAN}[+] Constructing volatile RAM-Disk file structure layers (${ALLOCATION_SIZE})...${NC}"
+    mkdir -p "${RAM_DISK_DIR}"
+    
+    # Mount high-speed temporary file-system layout into host memory allocation frames
+    if ! mountpoint -q "${RAM_DISK_DIR}"; then
+        mount -t tmpfs -o size="${ALLOCATION_SIZE}",noatime,nodev,nosuid tmpfs "${RAM_DISK_DIR}"
+    fi
+
+    # Hydrate ramcache arrays from persistent storage sectors if historic datasets exist
+    mkdir -p "${PERSISTENT_STORE}"
+    echo -e "${CYAN}[+] Hydrating active scratch blocks from flash persistence sectors...${NC}"
+    rsync -a "${PERSISTENT_STORE}/" "${RAM_DISK_DIR}/"
+
+    # Symlink temporary sandbox memory layers directly into target mining and container trees
+    mkdir -p "${RAM_DISK_DIR}/xmrig_cache" "${RAM_DISK_DIR}/browser_profiles"
+    echo -e "${GREEN}[✓] RAM-disk caching pipeline established. Input/Output friction minimized.${NC}"
+}
+
+synchronize_to_disk() {
+    echo -e "${CYAN}[*] Serializing volatile RAM-Disk changed sectors back to physical Btrfs blocks...${NC}"
+    if mountpoint -q "${RAM_DISK_DIR}"; then
+        # Perform atomic block-level synchronization via high-speed tracking parameters
+        rsync -a --delete "${RAM_DISK_DIR}/" "${PERSISTENT_STORE}/"
+        echo -e "${GREEN}[✓] Persistent disk layout synchronized successfully with memory frames.${NC}"
+    else
+        echo -e "${RED}[-] Target RAM optimization mountpoint missing or detached. Halting sync processes.${NC}"
+        exit 1
+    fi
+}
+
+case "${1:-}" in
+    "start")
+        initialize_ram_cache
+        ;;
+    "sync")
+        synchronize_to_disk
+        ;;
+    *)
+        echo "Usage: ${0} {start|sync}"
+        exit 1
+        ;;
+esac
