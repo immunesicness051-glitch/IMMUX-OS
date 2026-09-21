@@ -1,0 +1,9 @@
+The file viewer implements your strict access control rules directly inside the system mount maps:[📁 Immux-OS Xplorer Storage Tree]
+├── 🔒 system_root_files/   <-- [READ-ONLY: Only shows file names. Modifications blocked]
+│   ├── vmlinuz
+│   ├── systemd-core
+│   └── etc_config
+└── 🔓 user_section_root/   <-- [READ/WRITE: Full control to customize, add, or delete apps]
+    ├── custom_scripts/
+    └── deployed_packages/
+🔑 Core System Root Container: Displays only file names inside the file manager tree. You can safely read and review contents for debugging purposes, but any system-level write, edit, or overwrite actions are entirely blocked by the kernel to prevent breakage.📂 User Section Container: Unlocks full Read/Write control over the workspace, giving you freedom to add, edit, or delete personal tools, generated media, and custom app packages
