@@ -1,0 +1,61 @@
+cat << 'EOF' > /usr/local/bin/immux-sync
+#!/usr/bin/env python3
+"""
+IMMUX-SYNC: Multi-Agent Context Aggregator & Cross-Model Bridge
+Gathers local file operations, Btrfs cache locations, and save snapshots,
+formatting them into a silent markdown context file for external agents.
+"""
+
+import os
+import sys
+import json
+import time
+
+STORAGE_MANIFEST = "/etc/immux/storage_links.json"
+AI_CONTEXT_OUT = "/var/log/immux/ai_agent_context.md"
+
+def compile_shared_telemetry():
+    if not os.path.exists(STORAGE_MANIFEST):
+        # Default placeholder mapping layer if manifest hasn't initialized yet
+        initial_map = {
+            "unreal_engine": {"status": "Idle", "current_pool": "Internal_Btrfs"},
+            "unity_hub": {"status": "Idle", "current_pool": "Internal_Btrfs"},
+            "godot_engine": {"status": "Idle", "current_pool": "Internal_Btrfs"}
+        }
+        os.makedirs(os.path.dirname(STORAGE_MANIFEST), exist_ok=True)
+        with open(STORAGE_MANIFEST, "w") as f:
+            json.dump(initial_map, f, indent=4)
+        return initial_map
+
+    with open(STORAGE_MANIFEST, "r") as f:
+        try:
+            return json.load(f)
+        except Exception:
+            return {}
+
+def main():
+    print("\033[1;36m[+] IMMUX-SYNC Engine executing profile state translation...\033[0m")
+    manifest = compile_shared_telemetry()
+    
+    md_lines = [
+        "# IMMUX-OS ACTIVE SYNC PROFILE RULES & CONTEXT PLATFORM",
+        f"Generated Timestamp: {int(time.time())}",
+        "This manifest allows external multi-agent structures (Gemini, Claude) to sync without collision.\n",
+        "## Active Mounted Environments & Storage Links"
+    ]
+    
+    for app, info in manifest.items():
+        md_lines.append(f"- **{app}**: Execution State: `{info.get('status', 'Unknown')}` | Path: `{info.get('current_pool', 'Unassigned')}`")
+        
+    md_lines.append("\n## Save State Rules Validation")
+    md_lines.append("- Isolated game states are extracted to `/mnt/immux-pool/user_save_states/` before memory wiping commands run.")
+
+    os.makedirs(os.path.dirname(AI_CONTEXT_OUT), exist_ok=True)
+    with open(AI_CONTEXT_OUT, "w") as f:
+        f.write("\n".join(md_lines))
+        
+    print("\033[1;32m[✓] Multi-agent system state manifest updated successfully at /var/log/immux/ai_agent_context.md\033[0m")
+
+if __name__ == "__main__":
+    main()
+EOF
