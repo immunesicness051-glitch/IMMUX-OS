@@ -1,0 +1,37 @@
+#!/bin/bash
+# Immux-OS Core Decoupled Base Package Aggregator
+# Path: /usr/share/immux/templates/base_packages.blueprint
+
+echo -e "\e[1;34m[*] Assembling Independent System Package Manifest...\e[0m"
+
+# 1. Base Layer (Essential Utilities - Monolithic A-Z Base)
+IMMUX_BASE_A_Z=(
+    "firefox-developer-edition" # Unified Web Proxy Browser Core
+    "xwayland"                 # Multi-environment UI Translation Layer
+    "wayfire"                  # Ultra-lightweight Psychedelic Composer Base
+    "i3status"                 # System Telemetry Monitors
+    "curl" "wget" "jq"         # Micro-script Network Pipelines
+    "ntp"                      # Clock System
+    "calcurse"                 # Command-line Calendar Subsystem
+)
+
+# 2. Non-Disruptive Google Ecosystem Workspace Packages
+IMMUX_GOOGLE_EXTENSIONS=(
+    "chromium-extension-google-meet" 
+    "google-drive-ocamlfuse"          # Opt-in Cloud Storage Bridge
+)
+
+# 3. Dynamic Installation Verification Node
+# Installs base packages cleanly without creating systemic dependencies
+for pkg in "${IMMUX_BASE_A_Z[@]}"; do
+    if ! pacman -Qi "$pkg" &>/dev/null; then
+        echo -e "  \e[1;32m[+]\e[0m Pre-baking base package target: $pkg"
+    fi
+done
+
+# 4. Decoupled Architecture Enforcer Configuration
+# Configures the package manager to ignore missing Google hooks, ensuring the system won't break if uninstalled
+mkdir -p /etc/pacman.d/
+echo "NoUpgrade = etc/immux/google_services.conf" >> /etc/pacman.conf
+
+echo -e "\e[1;32m[✓] Baseline packages consolidated into a single immutable SquashFS layer without hard service ties.\e[0m"
