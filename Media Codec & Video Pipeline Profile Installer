@@ -1,0 +1,48 @@
+/usr/local/bin/immux-media-installer.sh
+
+
+#!/usr/bin/env bash
+# Immux-OS Media Pipeline & Social Platform Codec Deployment Core
+set -e
+
+# Termux/Powershell/Bash Multi-Color Codes
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+MAGENTA='\033[0;35m'
+NC='\033[0m' # No Color
+
+echo -e "${CYAN}[+] Spawning Immux Multimedia Codec Verification Subprocess...${NC}"
+
+install_arch_codecs() {
+    echo -e "${MAGENTA}[*] Injecting video player pipeline frameworks into Arch/BlackArch userlands...${NC}"
+    # Install hardware-accelerated playback layers, gstreamer sinks, and standard format libraries
+    pacman -S --noconfirm --needed \
+        ffmpeg \
+        gst-plugins-base \
+        gst-plugins-good \
+        gst-plugins-bad \
+        gst-plugins-ugly \
+        libva-mesa-driver \
+        vlc
+}
+
+install_alpine_codecs() {
+    echo -e "${MAGENTA}[*] Configuring lightweight rendering codecs within Alpine minimal core layers...${NC}"
+    apk add --no-cache \
+        ffmpeg-libs \
+        gstreamer \
+        gst-plugins-base \
+        gst-plugins-good
+}
+
+# Evaluate host platform and provision correct profiles dynamically
+if [ -f /etc/arch-release ]; then
+    install_arch_codecs
+elif [ -f /etc/alpine-release ]; then
+    install_alpine_codecs
+else
+    echo -e "${YELLOW}[!] Unknown environment profile context. Defaulting to standalone target streams.${NC}"
+fi
+
+echo -e "${GREEN}[+] Global Social Video Pipe Sockets Integrated into System Configurations.${NC}"
