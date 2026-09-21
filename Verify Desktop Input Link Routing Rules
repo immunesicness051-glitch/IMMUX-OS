@@ -1,0 +1,24 @@
+This verification layer handles routing active mouse positions, multi-touch events, and keyboard macros inside the desktop server context. When interacting with the 3D Desktop Cube, events must correctly transition between your parent system and isolated terminal sandboxes (Alpine, Arch, and Termux environments) without socket conflicts or visual disconnects
+
+
+
+
+ ┌──────────────────────┬──────────────────────┬──────────────────────────────┐
+ │ INPUT SOURCE CHANNEL │ SOCKET INTERACTION   │ FALLBACK DESKTOP BEHAVIOR    │
+ ├──────────────────────┼──────────────────────┼──────────────────────────────┤
+ │ Touch Matrix/Gesture │ /dev/input/event*    │ Translates multi-touch point │
+ │ Layer                │                      │ vectors down to standard 2D  │
+ │                      │                      │ absolute screen positioning. │
+ ├──────────────────────┼──────────────────────┼──────────────────────────────┤
+ │ 3D Cube Rotation UX  │ Wayland Socket       │ Intercepts coordinates and   │
+ │                      │ (WAYLAND_DISPLAY)    │ shifts viewport perspective  │
+ │                      │                      │ transformation layers.       │
+ ├──────────────────────┼──────────────────────┼──────────────────────────────┤
+ │ Sandbox Terminal     │ Virtual TTY Sync     │ Redirects physical keyboard  │
+ │ Inputs               │ (/dev/pts/*)         │ streams directly into active │
+ │                      │                      │ proot/chroot console loops.  │
+ └──────────────────────┴──────────────────────┴───────────────────────────
+
+
+
+
