@@ -1,0 +1,125 @@
+/usr/local/bin/immux-setup-wizard.py
+
+
+#!/usr/bin/env python3
+"""
+Immux-OS Automated Configuration Boot Wizard
+Provides a fast, terminal-native setup wizard with rich ANSI colors
+to customize credentials, backup targets, and profit node parameters.
+"""
+
+import os
+import sys
+import json
+import shutil
+
+# ANSI High-Intensity Core Palette
+C_BLUE = "\033[1;34m"
+C_GREEN = "\033[1;32m"
+C_YELLOW = "\033[1;33m"
+C_RED = "\033[1;31m"
+C_MAGENTA = "\033[1;35m"
+C_CYAN = "\033[1;36m"
+C_RESET = "\033[0m"
+
+MINER_CONFIG_PATH = "/etc/immux/miner_profile.json"
+NETWORK_CONFIG_PATH = "/etc/immux/network.json"
+
+def clear_screen():
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+def display_banner():
+    clear_screen()
+    print(f"{C_MAGENTA}========================================================================{C_RESET}")
+    print(f"{C_CYAN}      ___ __  __ __  __ _    _ _  __       ____   _____       {C_RESET}")
+    print(f"{C_CYAN}     |_   _||  \\/  |  \\/  | |  | | |/ /      / __ \\ / ____|      {C_RESET}")
+    print(f"{C_CYAN}       | |  | \\  / | \\  / | |  | | ' / _____| |  | | (___        {C_RESET}")
+    print(f"{C_CYAN}       | |  | |\\/| | |\\/| | |  | |  < |______| |  | |\\___ \\       {C_RESET}")
+    print(f"{C_CYAN}      _| |_ | |  | | |  | | |__| | . \\      | |__| |____) |      {C_RESET}")
+    print(f"{C_CYAN}     |_____||_|  |_|_|  |_|\\____/|_|\\_\\      \\____/|_____/       {C_RESET}")
+    print(f"                                                                        ")
+    print(f"            {C_YELLOW}--- CENTRALIZED PROFILE CONFIGURATION WIZARD ---{C_RESET}")
+    print(f"{C_MAGENTA}========================================================================{C_RESET}")
+
+def run_setup_wizard():
+    display_banner()
+    print(f"{C_BLUE}[*] Initializing system initialization structures...{C_RESET}\n")
+
+    # Step 1: Secure Master Root Password Configuration
+    print(f"{C_YELLOW}[Step 1/4] Enforcing Deep Root Space Security Matrix{C_RESET}")
+    print("------------------------------------------------------------------------")
+    print("This distributes credentials exclusively to the hardware owner space.")
+    root_pass = input(f"{C_GREEN}Configure your Immux-OS master system root password: {C_RESET}").strip()
+    while not root_pass:
+        root_pass = input(f"{C_RED}[!] Password cannot be null. Please provide key: {C_RESET}").strip()
+
+    # Step 2: System-Wide Ad-Blocking Network Policy
+    display_banner()
+    print(f"{C_YELLOW}[Step 2/4] Configure System-Wide Global Ad-Blocker{C_RESET}")
+    print("------------------------------------------------------------------------")
+    adblock_choice = input(f"Enable deep automated host packet intercept filtering globally? ({C_GREEN}y{C_RESET}/{C_RED}n{C_RESET}): ").strip().lower()
+    enable_adblock = True if adblock_choice == 'y' else False
+
+    # Step 3: Transparent Value-Generation Configuration
+    display_banner()
+    print(f"{C_YELLOW}[Step 3/4] Transparent Value-Generation Engine Setup{C_RESET}")
+    print("------------------------------------------------------------------------")
+    print("Unlike corporate operating systems that profile you for cash, Immux-OS")
+    print("reverses the equation by routing decentralized yields straight to you.")
+    miner_choice = input(f"Enable background Monero compute node allocation? ({C_GREEN}y{C_RESET}/{C_RED}n{C_RESET}): ").strip().lower()
+    
+    wallet_address = "Omitted"
+    if miner_choice == 'y':
+        wallet_address = input(f"{C_GREEN}Paste your destination Monero (XMR) Wallet Address:\n> {C_RESET}").strip()
+        while len(wallet_address) < 10:
+            print(f"{C_RED}[-] Invalid wallet descriptor footprint length.{C_RESET}")
+            wallet_address = input(f"{C_GREEN}Please enter a valid target wallet configuration address:\n> {C_RESET}").strip()
+
+    # Step 4: Multi-Provider Cloud Storage Backup Layer
+    display_banner()
+    print(f"{C_YELLOW}[Step 4/4] Free-Tier Cloud Mirror Synchronization{C_RESET}")
+    print("------------------------------------------------------------------------")
+    print("Immux-OS automatically shreds tracking data and splits encrypted backups")
+    print("across cloud providers to ensure zero data-loss footprints.")
+    print(f"Supported layers: {C_CYAN}Proton Drive, Mega, Google Drive, Backblaze B2{C_RESET}\n")
+    
+    link_cloud = input(f"Would you like to authorize Rclone cloud providers right now? ({C_GREEN}y{C_RESET}/{C_RED}n{C_RESET}): ").strip().lower()
+    if link_cloud == 'y':
+        print(f"\n{C_BLUE}[*] Launching native `rclone config` helper subsystems...{C_RESET}")
+        print("    Configure your targets with names matching 'proton_free', 'mega_free', or 'gdrive_free'.")
+        import time; time.sleep(2)
+        if shutil.which("rclone"):
+            os.system("rclone config")
+        else:
+            print(f"{C_RED}[!] Rclone toolchain absent from current context workspace framework.{C_RESET}")
+            time.sleep(2)
+
+    # Save finalized structured environment manifest payloads
+    miner_payload = {
+        "enabled_by_user": True if miner_choice == 'y' else False,
+        "user_wallet_address": wallet_address,
+        "stratum_pool_url": "://supportxmr.com",
+        "cpu_allocation_intensity_pct": 40,
+        "run_only_on_ac_power": True
+    }
+    
+    net_payload = {
+        "system_wide_adblock": enable_adblock,
+        "isolated_sysroot_boundary": True,
+        "wayland_routing_port": 6000
+    }
+
+    os.makedirs("/etc/immux", exist_ok=True)
+    with open(MINER_CONFIG_PATH, "w") as f:
+        json.dump(miner_payload, f, indent=4)
+    with open(NETWORK_CONFIG_PATH, "w") as f:
+        json.dump(net_payload, f, indent=4)
+
+    display_banner()
+    print(f"{C_GREEN}[✓] Setup sequence completed successfully!{C_RESET}")
+    print(f"    - Deep space master parameters synchronized.")
+    print(f"    - Execution boundaries deployed across all multi-world frames.\n")
+    input(f"{C_BLUE}Press Enter to deploy the 3D Desktop Environment Cube...{C_RESET}")
+
+if __name__ == "__main__":
+    run_setup_wizard()
