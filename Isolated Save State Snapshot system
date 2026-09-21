@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+"""
+Immux-OS On-Demand App Hydration & State Matrix Split Engine
+Expands compact engine/game nodes into high-speed runtime mount zones on the fly.
+Isolates, protects, and restores precise game save states while shredding multi-GB runtime caches.
+"""
+
+import os
+import sys
+import subprocess
+import json
+import shutil
+
+RUN_DIR = "/run/immux/active_apps"
+STORAGE_POOL = "/mnt/immux-pool/compressed_apps"
+SAVE_STATE_POOL = "/mnt/immux-pool/user_save_states"
+
+# Multi-Color Console Feedback Accents
+C_BLUE = "\033[1;34m"
+C_GREEN = "\033[1;32m"
+C_YELLOW = "\033[1;33m"
+C_RED = "\033[1;31m"
+C_CYAN = "\033[1;36m"
+C_RESET = "\033[0m"
+
+# Common configuration and save directory hooks within standard game builds
+SAVE_DIR_KEYWORDS = [
+    "Saved/SaveGames", "SaveData", "saves", ".config/unity3d", "LocalStorage", "user_data"
+]
+
+class AppStateDeploymentEngine:
+    def __init__(self):
+        os.makedirs(RUN_DIR, exist_ok=True)
+        os.makedirs(STORAGE_POOL, exist_ok=True)
+        os.makedirs(SAVE_STATE_POOL, exist_ok=True)
+
+    def extract_and_hydrate(self, app_id):
+        """Unpacks baseline compressed assets, then restores isolated historical save files."""
+        source_archive = os.path.join(STORAGE_POOL, f"{app_id}.zip")
+        target_runtime_space = os.path.join(RUN_DIR, app_id)
+        saved_state_archive = os.path.join(SAVE_STATE_POOL, f"{app_id}_savestate.zip")
+
+        print(f"{C_CYAN}[+] Hydrating platform node: '{app_id}' into memory space...{C_RESET}")
+        
+        if os.path.exists(target_runtime_space):
+            print(f"  {C_YELLOW}[*] Target container runtime workspace already active.{C_RESET}")
+            return target_runtime_space
+
+        os.makedirs(target_runtime_space, exist_ok=True)
+        
+        # 1. Hydrate core engine asset blocks
+        if os.path.exists(source_archive):
+            shutil.unpack_archive(source_archive, target_runtime_space, 'zip')
+            print(f"  {C_GREEN}[✓] Extracted core base package structure.{C_RESET}")
+        else:
+            print(f"  {C_YELLOW}[*] No base cache snapshot detected. Starting fresh container setup.{C_RESET}")
+
+        # 2. Inject historical user save state snapshot
+        if os.path.exists(saved_state_archive):
+            print(f"  {C_BLUE}[*] Historical save snapshot located! Injecting game states...{C_RESET}")
+            shutil.unpack_archive(saved_state_archive, target_runtime_space, 'zip')
+            print(f"  {C_GREEN}[✓] Progress matrix synchronized successfully. Session ready for deployment.{C_RESET}")
+        else:
+            print(f"  {C_YELLOW}[*] No historic save record found for this node profile.{C_RESET}")
+            
+        return target_runtime_space
+
+    def freeze_put_away_with_state(self, app_id):
+        """Preserves precise saved states while stripping caches and compressing the engine shell."""
+        target_runtime_space = os.path.join(RUN_DIR, app_id)
+        engine_destination_base = os.path.join(STORAGE_POOL, app_id)
+        state_destination_base = os.path.join(SAVE_STATE_POOL, f"{app_id}_savestate")
+
+        if not os.path.exists(target_runtime_space):
+            print(f"{C_RED}[[-] Active container mount points absent. Skipping freeze cycle.{C_RESET}")
+            return
+
+        print(f"\n{C_YELLOW}[!] Freezing platform node: '{app_id}'. Extracting progress states...{C_RESET}")
+        
+        # 1. Harvest save files out to isolated storage BEFORE cleaning out caches
+        temp_state_harvest_dir = os.path.join(RUN_DIR, f"{app_id}_state_temp")
+        os.makedirs(temp_state_harvest_dir, exist_ok=True)
+        
+        found_states = False
+        for root, dirs, files in os.walk(target_runtime_space):
+            for folder in dirs:
+                if any(keyword.lower() in folder.lower() for keyword in SAVE_DIR_KEYWORDS):
+                    full_source_path = os.path.join(root, folder)
+                    relative_sub_path = os.path.relpath(full_source_path, target_runtime_space)
+                    target_harvest_dest = os.path.join(temp_state_harvest_dir, relative_sub_path)
+                    
+                    os.makedirs(os.path.dirname(target_harvest_dest), exist_ok=True)
+                    if os.path.exists(full_source_path):
+                        shutil.copytree(full_source_path, target_harvest_dest, dirs_exist_ok=True)
+                        found_states = True
+
+        if found_states:
+            # Compress isolated user save files into historical state storage node
+            shutil.make_archive(state_destination_base, 'zip', temp_state_harvest_dir)
+            print(f"  {C_GREEN}[✓] Saved game states isolated and archived safely in user profile space.{C_RESET}")
+        shutil.rmtree(temp_state_harvest_dir)
+
+        # 2. Shred bloated, transient graphics/compiler cache folders to free up disk space
+        cache_subdirectories = [
+            "DerivedDataCache", "Intermediate", "Saved/Logs", ".gradle", "obj", "Debug", "Cache"
+        ]
+        for sub_dir in cache_subdirectories:
+            full_cache_path = os.path.join(target_runtime_space, sub_dir)
+            if os.path.exists(full_cache_path):
+                print(f"  {C_RED}[-] Shredding multi-GB execution cache: {sub_dir}{C_RESET}")
+                shutil.rmtree(full_cache_path)
+
+        # 3. Zip the remaining lightweight engine directory structure back down into an idle state
+        print(f"{C_GREEN}[+] Packing core engine shell back to idle storage pool...{C_RESET}")
+        shutil.make_archive(engine_destination_base, 'zip', target_runtime_space)
+        
+        # Completely scrub volatile workspace run path directory
+        shutil.rmtree(target_runtime_space)
+        print(f"{C_GREEN}[✓] Application successfully put away. Runtime data footprint optimized to minimums.{C_RESET}")
+
+    def manage_app_session(self, app_id, binary_name):
+        runtime_path = self.extract_and_hydrate(app_id)
+        exec_binary = os.path.join(runtime_path, binary_name)
+        
+        if not os.path.exists(exec_binary):
+            with open(exec_binary, "w") as f:
+                f.write("#!/bin/bash\necho '[*] Emulating Core Engine Initialization Loop...'\nsleep 2\n")
+            os.chmod(exec_binary, 0o755)
+
+        print(f"{C_GREEN}[+] Dispatched main active process thread frame. Launching graphics shell...{C_RESET}")
+        subprocess.run(exec_binary, shell=True)
+        
+        # User closed application session link -> automatically invoke persistent split freeze mechanics
+        self.freeze_put_away_with_state(app_id)
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: immux-deploy-app [app_id] [binary_name]")
+        sys.exit(1)
+        
+    engine = AppAppStateDeploymentEngine()
+    engine.manage_app_session(sys.argv[1], sys.argv[2])
