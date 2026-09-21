@@ -1,0 +1,1 @@
+To ensure that the Alpine Core, Arch/BlackArch Userland, and Termux environments are properly isolated yet can cross-communicate, Immux-OS uses structured systemd mount units. These bypass traditional slow copies and instantly map read-only root blocks and storage subvolumes at boot time.
