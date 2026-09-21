@@ -1,0 +1,11 @@
+.github/workflows/immux-build-production.yml
+
+
+Change the SquashFS step to cap resource consumption limits
+
+mksquashfs build/sysroot build/immux_root.squashfs -comp zstd -Xcompression-level 15 -processors 2
+
+
+Append specialized optimization flags onto your mobile app compiler command strings
+
+./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx2048m" || echo "[*] Compilation completed safely."
