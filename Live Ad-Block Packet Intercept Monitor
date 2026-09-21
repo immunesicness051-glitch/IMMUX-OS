@@ -1,0 +1,39 @@
+/usr/local/bin/immux-ad-monitor.py
+
+
+#!/usr/bin/env python3
+"""
+Immux-OS Live Network Ad-Block Event Interception Streamer
+Hooks into active nftables network logs to catch and report tracking blockages in real-time.
+"""
+
+import os
+import sys
+import subprocess
+import re
+
+def monitor_adblock_drops():
+    print("\033[1;31m[+] Spawning Global Ad-Block Terminal Event Listener Node... (Awaiting Intercepts)\033[0m")
+    
+    # Hook directly into system logs parsing for drops triggered by local nftables rule profiles
+    cmd = "journalctl -f -g 'immux_filter'"
+    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    
+    try:
+        for line in process.stdout:
+            if "DROP" in line or "BLOCK" in line:
+                # Isolate target metrics and domain signatures out of the log line string
+                match_ip = re.search(r"SRC=([0-9\.]+)\s+DST=([0-9\.]+)", line)
+                src = match_ip.group(1) if match_ip else "Internal_Sandbox"
+                dst = match_ip.group(2) if match_ip else "Ad_Tracker_Server"
+                
+                print(f"  \033[1;31m[BLOCKED ANCHOR LOG]\033[0m Intercepted tracking connection attempt from [\033[1;33m{src}\033[0m] → Sinkholed destination: [\033[1;31m{dst}\033[0m]")
+    except KeyboardInterrupt:
+        process.terminate()
+        print("\n[-] Ad-block tracking terminal dashboard connection detached.")
+
+if __name__ == "__main__":
+    if os.geteuid() != 0:
+        print("[-] Live network capturing processes require root execution context bindings.")
+        sys.exit(1)
+    monitor_adblock_drops()
