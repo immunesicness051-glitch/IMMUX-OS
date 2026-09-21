@@ -1,0 +1,7 @@
+/etc/udev/rules.d/99-immux-hotplug.rules
+
+
+# Immux-OS Mass Storage Subsystem Interceptor Hook
+# Triggers deep system mount operations upon flash card or storage drive structural attachments
+SUBSYSTEM=="block", ACTION=="add", ENV{ID_USB_DRIVER}=="usb-storage", RUN+="/usr/local/bin/immux-mount-hotplug.sh add %k"
+SUBSYSTEM=="block", ACTION=="remove", RUN+="/usr/local/bin/immux-mount-hotplug.sh remove %k"
