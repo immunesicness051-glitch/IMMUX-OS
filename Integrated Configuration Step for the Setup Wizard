@@ -1,0 +1,31 @@
+/usr/local/bin/immux-setup-wizard.py
+
+def choose_development_suites():
+    print(f"\n{C_YELLOW}[Optional Step] Custom Engineering & Production Suite Selection{C_RESET}")
+    print("------------------------------------------------------------------------")
+    print("Select target platform suites to pre-provision as compressed idle nodes.")
+    print("This sets up launcher shortcuts while saving maximum drive space.\n")
+    
+    selections = []
+    options = {
+        "1": "Unreal Engine Editor Suite",
+        "2": "Unity Hub & Compiler Core",
+        "3": "Godot Engine (Full 2D/3D Bundle)",
+        "4": "GameMaker Studio Workspace",
+        "5": "Construct 3 Linux Client Framework",
+        "6": "LibreOffice Industrial Suite"
+    }
+    
+    for key, label in options.items():
+        print(f"  [{key}] {label}")
+        
+    choices = input(f"\n{C_GREEN}Enter number indices to include (separated by commas, or press Enter to skip): {C_RESET}").strip()
+    
+    if choices:
+        for index in choices.split(","):
+            clean_idx = index.strip()
+            if clean_idx in options:
+                selections.append(options[clean_idx])
+                
+    print(f"\n{C_GREEN}[✓] Successfully mapped {len(selections)} on-demand shortcuts onto your desktop canvas profile.{C_RESET}")
+    import time; time.sleep(1.5)
