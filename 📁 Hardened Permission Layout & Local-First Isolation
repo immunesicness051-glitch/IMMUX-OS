@@ -1,0 +1,13 @@
+[🔒 READ-ONLY SYSTEM SYSTEM CONTAINER]
+  └── /etc/immux/            --> System Core Tables (Names visible, writes blocked)
+  └── /usr/bin/immuxsh       --> Core Shell Processing Nodes
+  
+[🔓 FULL READ/WRITE DEPLOYMENT SANDBOX]
+  └── /mnt/immux_space/user_space/
+        ├── immux_ai/output/fashion/   --> Fashion blue-prints (.tar.gz saves)
+        ├── output/iso_builds/          --> Ready-to-flash bootable system .iso files
+        └── custom_scripts/             --> Persistent applications
+
+
+
+System Files (/etc, /bin): Fixed as entirely Read-Only within your Xplorer file tree interface. You retain full access to view, audit, and read structures for debugging and manual shell tracking analysis, but the system code blocks any file modification commands.User Spaces (/mnt/immux_space/user_space): Provides full Read/Write control. This area holds your compiled fashion packages, generated audio/video content, local .json configurations, and custom scripts.Credential Privacy Core: All authorization tokens, user passwords, and identity maps remain completely isolated inside local machine constraints. The platform uses absolute file redirection barriers, ensuring no personal credentials or tracking strings route out to remote web stacks
