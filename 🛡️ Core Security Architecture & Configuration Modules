@@ -1,0 +1,33 @@
+1. Interactive Malware & Vulnerability Debugger Console CardsWhen a script execution tries to cross file boundaries or run an unverified exploit payload within the isolated user spaces, the system pauses execution. It pops up an Interactive Debugger Card with local code syntax highlighting:Execution Breakpoint Controller: Provides click controls to safely handle execution ([ Step Over ], [ Step Into ], [ Resume Run ], or [ 🛑 Force Terminate & Purge Archive ]).Active Memory Watch Panel: Displays live telemetry variables (e.g., origin tracking strings, modified file descriptors, and socket redirection targets) so you can inspect malicious functions safely within a sandbox before they can write to the user profile partition.2. Cookie Concealer & Anti-Tracking Extension Profile RulesTo block outside tracking networks and automated browser fingerprinters from recording your session history, cookies are managed through a proxy layer before routing out to the web window compositor.Cookie Shield Matrix: Implements automatic, secure rules that strip out telemetry tokens (like ?utm_source=, tracking IDs, and session tracers) from URLs before lines are resolved.Dynamic Data Masking: Third-party tracking scripts receive dummy values, keeping your authentication keys locked safely on the machine. This blocks tracking sites from building a behavioral profile of your setup.
+
+
+// Immux-OS Embedded Cookie Concealer Core Engine Profile Rules
+// Location: /etc/immux/profiles/firefox_conceal_rules.json
+{
+  "cookie_concealer_matrix": {
+    "engine_mode": "strict_isolation",
+    "global_enforcement": true,
+    "rules": {
+      "fingerprint_obfuscation": {
+        "randomize_user_agent_on_session": true,
+        "mask_canvas_hashes": true,
+        "spoof_audio_context_node": true
+      },
+      "ephemeral_cookie_handling": {
+        "force_third_party_session_only": true,
+        "strip_utm_tracking_parameters": true,
+        "auto_clear_on_idle_timeout_minutes": 15
+      },
+      "cryptographic_storage_isolation": {
+        "encrypt_local_sqlite_cookie_database": true,
+        "storage_salt_source": "hardware_token_local_key",
+        "block_cross_domain_credential_leakage": true
+      }
+    },
+    "exposed_tracker_categories": [
+      { "id": "analytics_beacon", "action": "REJECT_AND_DROP" },
+      { "id": "social_pixel_graph", "action": "CONCEAL_WITH_DUMMY_DATA" },
+      { "id": "cross_site_retargeting", "action": "BLOCK_HOST_INJECTION" }
+    ]
+  }
+}
