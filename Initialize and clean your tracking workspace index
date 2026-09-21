@@ -1,0 +1,13 @@
+# 1. Initialize and clean your tracking workspace index
+git rm -r --cached . >/dev/null 2>&1
+git add .
+
+# 2. Commit the structural build enhancements safely
+git commit -m "refactor: master orchestrator pipeline fixes, btrfs snapshot triggers, and asset purge"
+
+# 3. Verify or inject your GitHub Access Token for authentication if needed
+# Format: git remote set-url origin https://<YOUR_TOKEN>@://github.com
+# Note: Ensure your classic PAT has 'repo' and 'workflow' checkboxes ticked
+
+# 4. Force a clean, synchronized upstream transmission to kick off the fixed runner
+git push origin main --force
