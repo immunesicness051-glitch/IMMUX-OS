@@ -1,0 +1,61 @@
+/usr/local/bin/immux-render-pipeline.py
+
+#!/usr/bin/env python3
+"""
+Immux-OS Hardware Accelerated Graphics Pipeline Controller
+Optimizes and handles multi-environment Wayland/X11 acceleration layers
+utilizing VirGL and Mesa Zink backend abstractions.
+"""
+
+import os
+import sys
+import subprocess
+
+class RenderPipelineController:
+    def __init__(self):
+        self.wayland_socket = os.environ.get("WAYLAND_DISPLAY", "wayland-0")
+        self.x11_socket = os.environ.get("DISPLAY", ":0")
+
+    def configure_acceleration_args(self, environment="arch_userland"):
+        """Compiles specialized pipeline parameters based on targeted sandbox profiles."""
+        print(f"\033[94m[+]\033[0m Constructing acceleration arguments for platform target: \033[95m{environment}\033[0m")
+        
+        # Enforce Mesa Zink Vulkan layers alongside VirGL pass-through bounds
+        pipeline_env = {
+            "GALLIUM_DRIVER": "zink",
+            "MESA_LOADER_DRIVER_OVERRIDE": "zink",
+            "VIRGL_RENDERER_ALLOW_HOST_VULKAN": "1",
+            "WAYLAND_DISPLAY": self.wayland_socket,
+            "DISPLAY": self.x11_socket,
+            "XDG_RUNTIME_DIR": "/run/user/1000"
+        }
+        
+        # Merge configuration layers directly into active shell context profiles
+        for key, value in pipeline_env.items():
+            os.environ[key] = value
+            
+        print(f"    - Render Pipeline: \033[92mZink (Vulkan-over-OpenGL) Enabled\033[0m")
+        print(f"    - Host Hardware Socket Passing: \033[92m{self.wayland_socket}\033[0m")
+
+    def launch_accelerated_client(self, client_binary, args=[]):
+        """Executes application binary within isolated graphic containment pipelines."""
+        self.configure_acceleration_args()
+        
+        if not shutil_which(client_binary):
+            # Gracefully bounce to plain terminal pipe fallbacks if binary is unresolvable
+            print(f"\033[93m[!]\033[0m Target graphical bin '{client_binary}' missing. Redirecting to TTY fallback.")
+            return False
+
+        print(f"\033[92m[+]\033[0m Deploying graphical runtime surface window layers for: {client_binary}")
+        os.execvp(client_binary, [client_binary] + args)
+
+def shutil_which(cmd):
+    import shutil
+    return shutil.which(cmd)
+
+if __name__ == "__main__":
+    pipeline = RenderPipelineController()
+    if len(sys.argv) > 1:
+        pipeline.launch_accelerated_client(sys.argv[1], sys.argv[2:])
+    else:
+        pipeline.configure_acceleration_args()
