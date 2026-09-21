@@ -1,0 +1,18 @@
+/etc/systemd/system/immux-ramcache-sync.timer
+
+[Unit]
+Description=Immux-OS Dynamic RAM-Disk Atomic Sync Scheduler
+Documentation=https://github.com
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
+
+
+To enable and run the timer immediately, use this command in your terminal view:
+
+systemctl daemon-reload && systemctl enable --now immux-ramcache-sync.timer
