@@ -1,0 +1,43 @@
+/* Immux-OS Production Window Manager Theme Template */
+/* Path: /usr/share/themes/immux-psychedelic/wm-frame.css */
+
+@keyframes immux-breathing-hue {
+  0% {
+    background-color: rgb(11, 16, 38);
+    border-color: rgba(0, 242, 254, 0.8);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+  }
+  25% {
+    background-color: rgb(24, 11, 46);
+    border-color: rgba(143, 0, 255, 0.8);
+    box-shadow: 0 0 20px rgba(143, 0, 255, 0.5);
+  }
+  50% {
+    background-color: rgb(9, 36, 34);
+    border-color: rgba(0, 255, 178, 0.8);
+    box-shadow: 0 0 15px rgba(0, 255, 178, 0.4);
+  }
+  75% {
+    background-color: rgb(11, 28, 46);
+    border-color: rgba(0, 110, 255, 0.8);
+    box-shadow: 0 0 22px rgba(0, 110, 255, 0.6);
+  }
+  100% {
+    background-color: rgb(11, 16, 38);
+    border-color: rgba(0, 242, 254, 0.8);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+  }
+}
+
+/* Active Window Frame Properties Configuration */
+.immux-wm-window-frame {
+  border-width: 2px;
+  border-style: solid;
+  transition: background-color 2.5s ease-in-out, border-color 2.5s ease-in-out, box-shadow 2.5s ease-in-out;
+  backdrop-filter: blur(12px) saturate(140%);
+}
+
+.immux-wm-window-frame.breathing-active {
+  /* Regulated frequency duration parameter controlled natively by user configuration settings */
+  animation: immux-breathing-hue 24s infinite ease-in-out;
+}
