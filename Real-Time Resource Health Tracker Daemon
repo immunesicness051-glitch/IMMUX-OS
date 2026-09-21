@@ -1,0 +1,99 @@
+/usr/local/bin/immux-telemetry.py
+
+
+#!/usr/bin/env python3
+"""
+Immux-OS Real-Time System Health Telemetry Daemon
+Captures host utilization rates alongside sandboxed environment processing strains,
+outputting live updates directly onto the system developer dashboard target node.
+"""
+
+import os
+import sys
+import json
+import time
+
+METRICS_OUTPUT_PATH = "/run/immux/telemetry_dashboard.json"
+
+def calculate_cpu_usage():
+    """Calculates active CPU utilization based on system stat time frames."""
+    try:
+        with open("/proc/stat", "r") as f:
+            fields = f.readline().strip().split()[1:]
+        vals = [float(x) for x in fields]
+        idle_time = vals[3] + vals[4]
+        total_time = sum(vals)
+        return {"total": total_time, "idle": idle_time}
+    except Exception:
+        return {"total": 0, "idle": 0}
+
+def get_sandbox_memory_footprint(subvolume_path):
+    """Measures current block-level disk space consumption for the targeted container node."""
+    if not os.path.exists(subvolume_path):
+        return "0 MB (Offline)"
+    try:
+        # Check overall block sizes across environment path arrays
+        total_bytes = 0
+        for root, dirs, files in os.walk(subvolume_path):
+            for f in files:
+                fp = os.path.join(root, f)
+                if not os.path.islink(fp):
+                    total_bytes += os.path.getsize(fp)
+        return f"{round(total_bytes / (1024 * 1024), 2)} MB"
+    except Exception:
+        return "Unavailable"
+
+def stream_telemetry_loop():
+    print("\033[1;36m[+] Initializing Immux-OS Performance Tracking Telemetry Feed Node...\033[0m")
+    os.makedirs(os.path.dirname(METRICS_OUTPUT_PATH), exist_ok=True)
+    
+    last_stat = calculate_cpu_usage()
+    
+    while True:
+        time.sleep(1.0)
+        current_stat = calculate_cpu_usage()
+        
+        # Calculate localized CPU Delta percentage values
+        diff_total = current_stat["total"] - last_stat["total"]
+        diff_idle = current_stat["idle"] - last_stat["idle"]
+        cpu_usage_pct = 0.0 if diff_total == 0 else round((1.0 - (diff_idle / diff_total)) * 100, 2)
+        last_stat = current_stat
+
+        # Gather standard hardware memory allocations
+        mem_total, mem_available = 0, 0
+        try:
+            with open("/proc/meminfo", "r") as f:
+                for line in f:
+                    if "MemTotal" in line:
+                        mem_total = int(line.split()[1])
+                    if "MemAvailable" in line:
+                        mem_available = int(line.split()[1])
+            mem_used_pct = round(((mem_total - mem_available) / mem_total) * 100, 2)
+        except ZeroDivisionError:
+            mem_used_pct = 0.0
+
+        # Construct unified real-time tracking manifest
+        dashboard_payload = {
+            "timestamp": int(time.time()),
+            "system_metrics": {
+                "global_cpu_utilization_pct": cpu_usage_pct,
+                "global_ram_utilization_pct": mem_used_pct
+            },
+            "sandbox_storage_strains": {
+                "alpine_core": get_sandbox_memory_footprint("/mnt/immux-pool/alpine_active"),
+                "arch_userland": get_sandbox_memory_footprint("/mnt/immux-pool/arch_active"),
+                "termux_bridge": get_sandbox_memory_footprint("/mnt/immux-pool/termux_active")
+            }
+        }
+
+        # Write data frame atomatically to avoid UI rendering flashes
+        temp_path = f"{METRICS_OUTPUT_PATH}.tmp"
+        with open(temp_path, "w") as f:
+            json.dump(dashboard_payload, f, indent=4)
+        os.replace(temp_path, METRICS_OUTPUT_PATH)
+
+if __name__ == "__main__":
+    try:
+        stream_telemetry_loop()
+    except KeyboardInterrupt:
+        print("\n\033[1;31m[-] Telemetry service execution track safely terminated.\033[0m")
