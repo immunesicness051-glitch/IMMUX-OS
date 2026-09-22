@@ -1,0 +1,8 @@
+# Ensure you are precisely in your deployment folder
+cd ~/downloads/IMMUX-OS
+
+# Force Git to track every single item we just copied in
+git add .
+
+# Create your verified master deployment commit record
+git commit -m "release: deploy Immux-OS 26.00.01 core framework and integrate 3D glass HUD"
